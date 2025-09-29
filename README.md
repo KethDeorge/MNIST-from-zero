@@ -167,3 +167,6 @@ A：注意python版本
 Q：不会生成SSH
 A：`ssh-keygen -t rsa -b 4096 -C "你的GitHub邮箱"`
 同时在cli建议使用`SSH`而不是`HTTPS`
+
+Q：上传是NULL是什么
+A：不重要的提交
