@@ -5,6 +5,7 @@
 # - 优化器使用 SGD（学习率适中），训练过程非常稳定
 # - 目标：快速得到 >90% 的测试准确率，确认整体链路 OK
 
+# 各种import
 import time
 from pathlib import Path
 
@@ -14,13 +15,19 @@ from torch.utils.data import DataLoader
 from torchvision import datasets, transforms
 
 # ========= 1) 配置 =========
+# 种子，
 SEED = 42
+# 每一批处理的大小，i.e.这就是一次处理128张图片
 BATCH_SIZE = 128
+# 总共学习轮
 EPOCHS = 5          # 5 个 epoch 就能到 90%+；想更高可调到 10
 LR = 0.1            # 对于线性模型的稳定学习率；如不稳定可降到 0.05 或 0.01
+
+# 确定路径包括输入数据和导出的ckeckpoints路径
 DATA_ROOT = "./data"
 CKPT_DIR = Path("./checkpoints"); CKPT_DIR.mkdir(parents=True, exist_ok=True)
 
+# 我们使用的是CPU
 torch.manual_seed(SEED)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"[INFO] Using device: {device}")
@@ -43,8 +50,10 @@ print(f"[INFO] Train size: {len(train_ds)} | Test size: {len(test_ds)}")
 class SoftmaxRegression(nn.Module):
     def __init__(self):
         super().__init__()
+        # nn.Linear是Pytouch内置的一个类
+        # 注意到这里只有一个linear,所以这里只有一个全连接层，而不是一般情况下的很多个连接曾
         self.fc = nn.Linear(28*28, 10)  # 权重形状 [10, 784]，偏置 [10]
-
+    # 向前传播
     def forward(self, x):
         x = x.view(x.size(0), -1)      # 展平为 [B, 784]
         return self.fc(x)               # 输出 [B, 10] 的 logits（未做 softmax，交叉熵内部会处理）
@@ -58,9 +67,12 @@ optimizer = torch.optim.SGD(model.parameters(), lr=LR)
 # ========= 5) 训练与评估函数 =========
 def train_one_epoch(epoch: int):
     model.train()
+    # 损失，正确样本，总样本
     total_loss, correct, total = 0.0, 0, 0
 
+    # 从images和labes取得数据
     for images, labels in train_loader:
+        # to(device)是转移到GPU上面
         images, labels = images.to(device), labels.to(device)
 
         # 前向
@@ -80,8 +92,12 @@ def train_one_epoch(epoch: int):
 
     return total_loss / total, 100.0 * correct / total
 
+# 评估函数
+# 没有反向传播和更新，在不动参数的情况下检查
+# Python 装饰器
 @torch.no_grad()
 def evaluate():
+    # 切换到评估模式
     model.eval()
     total_loss, correct, total = 0.0, 0, 0
 
@@ -100,16 +116,21 @@ def evaluate():
 # ========= 6) 训练主流程 =========
 def main():
     best_acc = 0.0
+    # 记录时间
     start = time.time()
 
+    # 对跑循环（目前五轮）
     for epoch in range(EPOCHS):
+        # 跑训练集
         tr_loss, tr_acc = train_one_epoch(epoch)
+        # 评估
         te_loss, te_acc = evaluate()
         print(f"[EPOCH {epoch+1}] "
               f"train_loss={tr_loss:.4f} train_acc={tr_acc:.2f}% | "
               f"test_loss={te_loss:.4f} test_acc={te_acc:.2f}%")
 
         # 线性模型参数很小，保存一次最好权重方便后续对比
+        # 更新权重
         if te_acc > best_acc:
             best_acc = te_acc
             torch.save({

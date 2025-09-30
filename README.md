@@ -180,3 +180,6 @@ A：`ssh-keygen -t rsa -b 4096 -C "你的GitHub邮箱"`
 
 Q：上传是NULL是什么
 A：不重要的提交
+
+Q：在那里能看到这些函数什么功能？
+A：https://docs.pytorch.org/docs/stable/pytorch-api.html

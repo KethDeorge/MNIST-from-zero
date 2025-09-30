@@ -1,21 +1,16 @@
-# train_cnn_mnist.py
-# - 简洁的 2 层卷积 + 全连接头
-# - 训练稳定、收敛快（Adam+默认 ToTensor）
-# - 目标：测试准确率 > 98%
-
 import time
 from pathlib import Path
-
 import torch
 import torch.nn as nn
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, Subset
 from torchvision import datasets, transforms
+from tqdm import tqdm
 
 # ========= 1) 配置 =========
 SEED = 42
 BATCH_SIZE = 128
-EPOCHS = 5              # 5~8 个 epoch 一般就 >98%
-LR = 1e-3               # Adam 的常用学习率
+EPOCHS = 1           # 只跑 1 个 epoch
+LR = 1e-3            # Adam 学习率
 DATA_ROOT = "./data"
 CKPT_DIR = Path("./checkpoints"); CKPT_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -24,41 +19,38 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"[INFO] Using device: {device}")
 
 # ========= 2) 数据集 & DataLoader =========
-# 保持与原 baseline 一致：仅 ToTensor()（0~255 -> 0~1）
-# 如需再稳一点，可加 Normalize((0.1307,), (0.3081,))
 transform = transforms.ToTensor()
 
-train_ds = datasets.MNIST(root=DATA_ROOT, train=True,  download=True, transform=transform)
+train_ds = datasets.MNIST(root=DATA_ROOT, train=True, download=True, transform=transform)
 test_ds  = datasets.MNIST(root=DATA_ROOT, train=False, download=True, transform=transform)
 
-train_loader = DataLoader(train_ds, batch_size=BATCH_SIZE, shuffle=True)
-test_loader  = DataLoader(test_ds,  batch_size=BATCH_SIZE, shuffle=False)
+# 使用数据子集：5000 训练样本，1000 测试样本
+train_ds = Subset(train_ds, range(0, 5000))
+test_ds = Subset(test_ds, range(0, 1000))
+
+train_loader = DataLoader(train_ds, batch_size=BATCH_SIZE, shuffle=True, num_workers=4, persistent_workers=True, prefetch_factor=2)
+test_loader  = DataLoader(test_ds,  batch_size=BATCH_SIZE, shuffle=False, num_workers=4, persistent_workers=True, prefetch_factor=2)
 
 print(f"[INFO] Train size: {len(train_ds)} | Test size: {len(test_ds)}")
 
-# ========= 3) 模型（简单 CNN）=========
-# 输入: [B,1,28,28]
-# conv1: 1->32, kernel=3, stride=1, padding=0 => 28->26
-# conv2: 32->64, kernel=3, stride=1, padding=0 => 26->24
-# pool: 2x2 => 24->12
-# 展平后: 64*12*12 = 9216
+# ========= 3) 模型（简化版 CNN）=========
 class SimpleCNN(nn.Module):
     def __init__(self):
         super().__init__()
         self.conv = nn.Sequential(
-            nn.Conv2d(1, 32, kernel_size=3, stride=1, padding=0),
+            nn.Conv2d(1, 16, kernel_size=3, stride=1, padding=0),  # 1->16
             nn.ReLU(inplace=True),
-            nn.Conv2d(32, 64, kernel_size=3, stride=1, padding=0),
+            nn.Conv2d(16, 32, kernel_size=3, stride=1, padding=0), # 16->32
             nn.ReLU(inplace=True),
-            nn.MaxPool2d(kernel_size=2),          # -> [B,64,12,12]
+            nn.MaxPool2d(kernel_size=2),                           # -> [B,32,12,12]
             nn.Dropout(0.25),
         )
         self.head = nn.Sequential(
-            nn.Flatten(),                          # -> [B, 9216]
-            nn.Linear(64*12*12, 128),
+            nn.Flatten(),
+            nn.Linear(32*12*12, 64),
             nn.ReLU(inplace=True),
             nn.Dropout(0.5),
-            nn.Linear(128, 10)                     # logits
+            nn.Linear(64, 10)     # 输出 10 类别
         )
 
     def forward(self, x):
@@ -76,7 +68,7 @@ optimizer = torch.optim.Adam(model.parameters(), lr=LR)
 def train_one_epoch(epoch: int):
     model.train()
     total_loss, correct, total = 0.0, 0, 0
-    for images, labels in train_loader:
+    for images, labels in tqdm(train_loader, desc=f"Train {epoch+1}"):
         images, labels = images.to(device), labels.to(device)
 
         logits = model(images)
@@ -97,7 +89,7 @@ def train_one_epoch(epoch: int):
 def evaluate():
     model.eval()
     total_loss, correct, total = 0.0, 0, 0
-    for images, labels in test_loader:
+    for images, labels in tqdm(test_loader, desc="Eval"):
         images, labels = images.to(device), labels.to(device)
         logits = model(images)
         loss = criterion(logits, labels)
