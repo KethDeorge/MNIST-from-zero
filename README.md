@@ -86,8 +86,7 @@ pip install torch==2.8.0+cpu torchvision==0.23.0+cpu --index-url https://downloa
 
 **下面的操作是我一般写项目的时候会用的，而不是说如何从github上面下载**
 1. 在github上创建仓库
-2. 在本地仓库建立和你的github的SSH连接
-3. 开始连接
+2. 开始连接
 
 接下来开始说每一个的操作
 #### github创建仓库
@@ -125,6 +124,9 @@ git push
 第一次应该是这样：
 **注意全部都在第二个区域操作**
 
+#### 从git上面下载本数据
+`git clone https://github.com/KethDeorge/MNIST-from-zero`
+
 ### 下载数据集
 代码如下：
 ```
@@ -154,6 +156,14 @@ print("训练集大小:", len(train_dataset))
 print("测试集大小:", len(test_dataset))
 
 ```
+
+
+`python visual_inspect.py --model logreg --ckpt checkpoints/mnist_logreg_best.pt`
+
+关于下载：
+`torchvision`会下载到`./data/MNIST/`里面，其中都是原始文件，具体的使用还要处理一次：
+必须至少访问一次数据，`processed/` 文件夹才会出现。
+
 
 # 附录QA
 Q：如果git初始不是`main`怎么办？
