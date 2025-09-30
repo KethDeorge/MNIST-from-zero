@@ -160,6 +160,8 @@ print("测试集大小:", len(test_dataset))
 
 `python visual_inspect.py --model logreg --ckpt checkpoints/mnist_logreg_best.pt`
 
+`python visual_inspect.py --model cnn --ckpt checkpoints/mnist_cnn_best.pt`
+
 关于下载：
 `torchvision`会下载到`./data/MNIST/`里面，其中都是原始文件，具体的使用还要处理一次：
 必须至少访问一次数据，`processed/` 文件夹才会出现。
