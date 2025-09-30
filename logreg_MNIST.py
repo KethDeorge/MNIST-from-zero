@@ -51,7 +51,7 @@ class SoftmaxRegression(nn.Module):
     def __init__(self):
         super().__init__()
         # nn.Linear是Pytouch内置的一个类
-        # 注意到这里只有一个linear,所以这里只有一个全连接层，而不是一般情况下的很多个连接曾
+        # 注意到这里只有一个linear,所以这里只有一个全连接
         self.fc = nn.Linear(28*28, 10)  # 权重形状 [10, 784]，偏置 [10]
     # 向前传播
     def forward(self, x):
