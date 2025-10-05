@@ -2,38 +2,43 @@ STILL IN BUILD 还在开发！
 
 # 从零开始的手写识别（MNIST）
 这真的是我作为一个新手写的最详细的project了，新手做项目若有问题多多包涵。
+## 前排提示：
+我们将不会教学以下的内容：  
+任何纯理论和纯数学的神经网络相关内容  
+在Linux电脑上打开命令行  
+注册Github账号
 
-本项目运行在`fedora42`，默认会基本的linux操作和命令行基础。
+我的电脑系统是`fedora42`
 
-注册github我就不交了。
 ## 概念部分
 ### 什么是神经网络/机器学习
-本质上来说，我们要构建的就是一个函数$F(\vec{x})=\vec{y}$，就是通过输入一个东西来得到另一个东西，其中输入输出和函数都是自己定义。
-
-比如我们这个项目就是输入一张图片，然后输出一个0-9的数字。而我们所要做的就是通过求得$F(x)$，使得输出的数字就是我们输入的那个数字的手写图片
-
+本质上来说，我们要构建的就是一个函数$F(\vec{x})=\vec{y}$，就是通过输入一个东西来得到另一个东西，其中输入输出和函数都是自己定义。  
+比如我们这个项目就是输入一张图片，然后输出一个0-9的数字。而我们所要做的就是通过求得$F(x)$，使得输出的数字就是我们输入的那个数字的手写图片  
 而神经网络就是一种模拟人脑角色的过程，比如说我们会发现
 - 数字7有一个折但是1没有折
 - 数字3有两个上下排列的半圆，2只有一个
 
-这就意味着
+这就意味着  
 - 如果一个输入的图片有折，那么他是7的概率就是大于1的概率
 - 如果有两个半圆，3的概率大于2
 
-通过让机器不断的识别不同涂层的内容，来提取（机器认为的）特征，最后得出对于每一个数字可能性的最大答案，然后通过`归一化`来让所有的可能性统一的变为0-1的概率，最后得出最大的可能性的结论
+通过让机器不断的识别图层中间不同的的内容，来提取（机器认为的）特征，最后得出对于每一个数字可能性的最大答案，然后通过`归一化`来让所有的可能性统一的变为0-1的概率，最后得出最大的可能性的结论
 
-卷积来说就是变得支持旋转和平移了（也可以让他不支持平移）。
+卷积来说就是变得支持旋转和平移了（也可以让他不支持旋转）。
+
 ### 什么是MNIST
 MNIST是一组数据集，其中包含了很多的图片，每一张图片具有如下的特征：
 - 内容只有手写的0-9
 - 大写是28\*28的像素
 - 单通道的灰度（i.e.只有黑白灰，没有彩色）
 
-#### 为什么用MNIST
+### 为什么用MNIST
 - 数据小，容易下载
 - 适合作为新手开始第一次（卷积）神经网络
+
 ## 如何开始从零开始MNIST
 ### 建立环境
+**请注意这里是Linux操作系统，如果是Windows操作系统请看QA**  
 我们使用的是`python`环境，通过创建`venv`来构建虚拟环境，隔绝和主程序的环境，具体操作如下：
 ```zsh
 # 确定python环境
@@ -46,11 +51,12 @@ python -m venv venv
 source venv/bin/activate
 ```
 
-在 Python 命令里，-m 的意思是“把某个库模块当作脚本来运行”。
-
+在 Python 命令里，-m 的意思是“把某个库模块当作脚本来运行”。  
 在激活后会看到命令行出现了`<venv>`字样
 
-接下来安装库：写文档：名字叫做`requirements.txt`
+接下来安装库：
+方法有两个：
+1. 写文档：名字叫做`requirements.txt`
 ```zsh
 # 基础科学计算
 numpy
@@ -67,11 +73,10 @@ scikit-learn
 tqdm
 
 ```
-
-然后运行：
+然后运行：  
 `pip install -r requirements.txt`
 
-或者直接
+2. 或者直接
 ```zsh
 # 安装科学计算 & 常用库
 pip install numpy scipy pandas matplotlib scikit-learn tqdm pillow
@@ -79,16 +84,17 @@ pip install numpy scipy pandas matplotlib scikit-learn tqdm pillow
 # 安装与 Python 3.13 兼容的 PyTorch CPU 版本及匹配的 torchvision
 pip install torch==2.8.0+cpu torchvision==0.23.0+cpu --index-url https://download.pytorch.org/whl/cpu
 ```
+
 ### 初始化git
 本项目托管在github上面，所以也会教学最基础的关于github的操作。
 
 由于我本人是一个不折不扣（并不是）的CLI派（有时候也会用`lazygit`），所以我会主要教学在命令行的操作
 
-**下面的操作是我一般写项目的时候会用的，而不是说如何从github上面下载**
+**下面的操作是如何从本地创建git并且上传到github，如果是从github下载请看QA**  
 1. 在github上创建仓库
 2. 开始连接
 
-接下来开始说每一个的操作
+接下来开始说具体的操作流程
 #### github创建仓库
 直接贴图，大家可能都知道怎么做
 
@@ -156,32 +162,42 @@ print("训练集大小:", len(train_dataset))
 print("测试集大小:", len(test_dataset))
 
 ```
-
-
-`python visual_inspect.py --model logreg --ckpt checkpoints/mnist_logreg_best.pt`
-
-`python visual_inspect.py --model cnn --ckpt checkpoints/mnist_cnn_best.pt`
-
 关于下载：
 `torchvision`会下载到`./data/MNIST/`里面，其中都是原始文件，具体的使用还要处理一次：
 必须至少访问一次数据，`processed/` 文件夹才会出现。
 
+### 训练数据
+由于代码长度原因，我不会在这里贴出完整代码，但是你可以通过查看`logreg_MNIST.py`和`CNN_MNIST_CPU.py`来查看对应的代码，其中
+logreg部分是通过逻辑回归的方法而CNN则是卷积神经网络。  
+再分别对他们python之后会在checkpoints里面获得对应的最优解，然后使用接下来的视觉方式检查
+
+**建议两个对照着看**
+
+### 使用视觉方式检查
+如下的两个代码是通过`visual_inspect.py`来检查训练的好坏程度，将会用视觉的方式来呈现。
+`python visual_inspect.py --model logreg --ckpt checkpoints/mnist_logreg_best.pt`
+
+`python visual_inspect.py --model cnn --ckpt checkpoints/mnist_cnn_best.pt`
+
+
 
 # 附录QA
-Q：如果git初始不是`main`怎么办？
-
+Q：如果git初始不是`main`怎么办？  
 A：
 `git config --global init.defaultBranch main`
 
-Q：py库安装失败
+Q：py库安装失败  
 A：注意python版本
 
-Q：不会生成SSH
+Q：不会生成SSH  
 A：`ssh-keygen -t rsa -b 4096 -C "你的GitHub邮箱"`
 同时在cli建议使用`SSH`而不是`HTTPS`
 
-Q：上传是NULL是什么
+Q：上传是NULL是什么  
 A：不重要的提交
 
-Q：在那里能看到这些函数什么功能？
+Q：在那里能看到这些函数什么功能？  
 A：https://docs.pytorch.org/docs/stable/pytorch-api.html
+
+Q：我是Windows系统怎么办  
+A：
